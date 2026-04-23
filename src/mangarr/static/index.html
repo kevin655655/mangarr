@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mangarr</title>
+  <link rel="stylesheet" href="/static/css/theme.css" />
+  <link rel="stylesheet" href="/static/css/builtin.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+  <link rel="stylesheet" href="/static/css/bubbly.css" />
+  <link rel="stylesheet" href="/static/css/soften.css" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="/static/js/data.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/data-api.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/atoms.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/pages/library.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/pages/series.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/pages/add.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/pages/wanted_history.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/pages/settings_stats.jsx" type="text/babel" data-type="module"></script>
+  <script src="/static/js/shell.jsx" type="text/babel" data-type="module"></script>
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Shell />);
+  </script>
+</body>
+</html>
