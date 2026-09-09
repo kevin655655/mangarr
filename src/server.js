@@ -36,8 +36,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Mangarr running on port ${PORT}`);
-});
+// Only start the server if this file is run directly (not required by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Mangarr running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

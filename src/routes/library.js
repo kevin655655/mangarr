@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const db = require('../db/database');
+const { importCbzMeta, readCbzMeta } = require('../services/cbz');
 
 // GET /api/library - List all manga in library
 router.get('/', (req, res) => {
@@ -135,6 +138,96 @@ router.delete('/:id', (req, res) => {
     }
     res.json({ message: 'Manga removed from library' });
   });
+});
+
+// POST /api/library/import-cbz - Import manga metadata from a CBZ file
+router.post('/import-cbz', (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath) {
+    return res.status(400).json({ error: 'filePath is required' });
+  }
+
+  const absPath = path.resolve(filePath);
+  if (!fs.existsSync(absPath)) {
+    return res.status(404).json({ error: 'CBZ file not found' });
+  }
+
+  try {
+    const imported = importCbzMeta(absPath);
+    const meta = readCbzMeta(absPath);
+
+    // Generate a synthetic mangabaka_id from the series title
+    const syntheticId = 'cbz-' + Buffer.from(imported.manga.title || 'unknown').toString('base64url');
+
+    res.json({
+      message: 'CBZ metadata imported',
+      mangabaka_id: syntheticId,
+      manga: imported.manga,
+      chapter: imported.chapter,
+      comicInfo: meta
+    });
+  } catch (error) {
+    console.error('CBZ import error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/library/:id/refresh-metadata - Refresh metadata from an on-disk CBZ
+router.post('/:id/refresh-metadata', (req, res) => {
+  const { filePath } = req.body;
+  const mangaId = req.params.id;
+
+  if (!filePath) {
+    return res.status(400).json({ error: 'filePath is required' });
+  }
+
+  const absPath = path.resolve(filePath);
+  if (!fs.existsSync(absPath)) {
+    return res.status(404).json({ error: 'CBZ file not found' });
+  }
+
+  try {
+    const imported = importCbzMeta(absPath);
+    const manga = imported.manga;
+
+    const sql = `
+      UPDATE library SET
+        title = COALESCE(NULLIF(?, ''), title),
+        description = COALESCE(NULLIF(?, ''), description),
+        authors = COALESCE(NULLIF(?, '[]'), authors),
+        artists = COALESCE(NULLIF(?, '[]'), artists),
+        genres = COALESCE(NULLIF(?, '[]'), genres),
+        publisher = COALESCE(NULLIF(?, ''), publisher),
+        content_rating = COALESCE(NULLIF(?, ''), content_rating),
+        original_language = COALESCE(NULLIF(?, ''), original_language),
+        rating = COALESCE(?, rating)
+      WHERE id = ?
+    `;
+
+    db.run(sql, [
+      manga.title,
+      manga.description,
+      JSON.stringify(manga.authors || []),
+      JSON.stringify(manga.artists || []),
+      JSON.stringify(manga.genres || []),
+      manga.publisher,
+      manga.contentRating,
+      manga.originalLanguage,
+      manga.rating,
+      mangaId
+    ], function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Manga not found in library' });
+      }
+      res.json({ message: 'Metadata refreshed from CBZ ComicInfo.xml' });
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;

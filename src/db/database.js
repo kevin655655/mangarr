@@ -64,6 +64,7 @@ function initTables() {
       chapter_title TEXT,
       status TEXT DEFAULT 'pending',
       progress INTEGER DEFAULT 0,
+      file_path TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (manga_id) REFERENCES library(id)
