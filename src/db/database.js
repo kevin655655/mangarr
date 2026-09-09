@@ -100,7 +100,10 @@ function initTables() {
             ]
           );
         }
+        db.emit('initialized');
       });
+    } else {
+      db.emit('initialized');
     }
   });
 }
@@ -159,6 +162,20 @@ function getDefaultSettings() {
   };
 }
 
+/**
+ * Wait for the database to finish initializing (creating tables).
+ * Resolves immediately if init has already completed.
+ */
+function waitForInit() {
+  return new Promise((resolve) => {
+    if (db.readyState && db.readyState === 'initialized') return resolve();
+    db.once('initialized', resolve);
+    // Fallback safety timeout in case the event was already emitted
+    setTimeout(resolve, 500);
+  });
+}
+
 module.exports.getDefaultSettings = getDefaultSettings;
+module.exports.waitForInit = waitForInit;
 
 module.exports = db;

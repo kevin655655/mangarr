@@ -9,7 +9,11 @@ describe('Library ComicInfo Import', () => {
   let tmpDir;
   let cbzPath;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    // Wait for DB tables to be created before reading/writing.
+    if (db.waitForInit) {
+      await db.waitForInit();
+    }
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mangarr-lib-test-'));
     cbzPath = path.join(tmpDir, 'sample.cbz');
 

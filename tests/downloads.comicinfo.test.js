@@ -9,28 +9,40 @@ describe('Downloads ComicInfo Integration', () => {
   let tmpDir;
   let mangaId;
 
-  beforeAll((done) => {
+  beforeAll(async () => {
+    // Ensure the database has finished initialization before touching tables.
+    // This avoids a race on CI where the slower filesystem can make the
+    // `CREATE TABLE IF NOT EXISTS` callback run after beforeAll fires.
+    if (db.waitForInit) {
+      await db.waitForInit();
+    }
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mangarr-dl-test-'));
     // Insert a test manga into library
-    db.run(
-      `INSERT INTO library (mangabaka_id, title, description, authors, artists, genres, publisher, content_rating, original_language, rating)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ['test-manga-1', 'Test Manga', 'A test manga.', '["Author A"]', '["Artist B"]', '["Action"]', 'PubCo', 'safe', 'ja', 8.5],
-      function(err) {
-        if (err) throw err;
-        mangaId = this.lastID;
-        done();
-      }
-    );
-  });
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO library (mangabaka_id, title, description, authors, artists, genres, publisher, content_rating, original_language, rating)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ['test-manga-1', 'Test Manga', 'A test manga.', '["Author A"]', '["Artist B"]', '["Action"]', 'PubCo', 'safe', 'ja', 8.5],
+        function(err) {
+          if (err) return reject(err);
+          mangaId = this.lastID;
+          resolve();
+        }
+      );
+    });
+  }, 15000);
 
-  afterAll((done) => {
+  afterAll(async () => {
     if (fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
-    db.run('DELETE FROM downloads WHERE manga_id = ?', [mangaId], () => {
-      db.run('DELETE FROM library WHERE id = ?', [mangaId], done);
-    });
+    if (mangaId) {
+      await new Promise((resolve) => {
+        db.run('DELETE FROM downloads WHERE manga_id = ?', [mangaId], () => {
+          db.run('DELETE FROM library WHERE id = ?', [mangaId], resolve);
+        });
+      });
+    }
   });
 
   test('POST /api/downloads queues a download', async () => {
