@@ -17,6 +17,15 @@ export const removeFromLibrary = (id) => api.delete(`/library/${id}`);
 export const getDownloads = () => api.get('/downloads');
 export const queueDownload = (data) => api.post('/downloads', data);
 
+// Settings API
+export const getSettings = () => api.get('/settings');
+export const getSettingsCategory = (category) => api.get(`/settings/${category}`);
+export const updateSettings = (settings) => api.put('/settings', settings);
+export const updateSettingsCategory = (category, data) => api.patch(`/settings/${category}`, data);
+export const resetSettings = (category) => api.post('/settings/reset', category ? { category } : {});
+export const exportSettings = () => api.get('/settings/export', { responseType: 'blob' });
+export const importSettings = (settings) => api.post('/settings/import', { settings });
+
 /**
  * Proxy an external image URL through the backend to bypass CORS/referrer restrictions
  * @param {string} url - The external image URL to proxy

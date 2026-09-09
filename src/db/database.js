@@ -34,6 +34,24 @@ function initTables() {
       artists TEXT,
       genres TEXT,
       chapters_count INTEGER DEFAULT 0,
+      volumes_count INTEGER DEFAULT 0,
+      content_rating TEXT,
+      demographic TEXT,
+      original_language TEXT,
+      publisher TEXT,
+      magazine TEXT,
+      rating REAL,
+      follows_count INTEGER DEFAULT 0,
+      views_count INTEGER DEFAULT 0,
+      last_updated TEXT,
+      anilist_id TEXT,
+      mal_id TEXT,
+      official_website TEXT,
+      raw_source_url TEXT,
+      english_license_url TEXT,
+      related_manga TEXT,
+      recommendations TEXT,
+      same_author_works TEXT,
       added_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -51,6 +69,95 @@ function initTables() {
       FOREIGN KEY (manga_id) REFERENCES library(id)
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      sources TEXT DEFAULT '{}',
+      downloads TEXT DEFAULT '{}',
+      reader TEXT DEFAULT '{}',
+      library TEXT DEFAULT '{}',
+      ui TEXT DEFAULT '{}',
+      advanced TEXT DEFAULT '{}',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, [], function(err) {
+    if (!err) {
+      // Insert default settings row if none exists
+      db.get('SELECT id FROM settings WHERE id = 1', [], (err, row) => {
+        if (!err && !row) {
+          const defaults = getDefaultSettings();
+          db.run(
+            `INSERT INTO settings (id, sources, downloads, reader, library, ui, advanced) VALUES (1, ?, ?, ?, ?, ?, ?)`,
+            [
+              JSON.stringify(defaults.sources),
+              JSON.stringify(defaults.downloads),
+              JSON.stringify(defaults.reader),
+              JSON.stringify(defaults.library),
+              JSON.stringify(defaults.ui),
+              JSON.stringify(defaults.advanced)
+            ]
+          );
+        }
+      });
+    }
+  });
 }
+
+function getDefaultSettings() {
+  return {
+    sources: {
+      mangabakaUrl: 'https://api.mangabaka.org',
+      mangadexUrl: 'https://api.mangadex.org',
+      additionalSources: [],
+      sourcePriority: ['mangabaka', 'mangadex'],
+      proxyType: 'none',
+      proxyHost: '',
+      proxyPort: '',
+      proxyUsername: '',
+      proxyPassword: '',
+      timeoutMs: 30000
+    },
+    downloads: {
+      defaultFormat: 'cbz',
+      concurrentDownloads: 3,
+      concurrentConnections: 4,
+      downloadDirectory: '',
+      autoDownloadNew: false,
+      deleteAfterRead: false,
+      imageQuality: 'original'
+    },
+    reader: {
+      readingDirection: 'rtl',
+      pageFitMode: 'fit-width',
+      backgroundColor: 'black',
+      customBackgroundColor: '#000000',
+      showPageNumbers: true,
+      preloadPages: 3,
+      doublePageSpreads: 'auto'
+    },
+    library: {
+      autoUpdateInterval: 'daily',
+      notificationPreference: 'browser',
+      metadataLanguage: 'english',
+      defaultContentFilter: 'hide-adult',
+      importDirectories: [],
+      exportFormat: 'json'
+    },
+    ui: {
+      theme: 'dark',
+      language: 'en',
+      itemsPerPage: 'normal',
+      coverSize: 'medium',
+      showNsfwCovers: 'blur'
+    },
+    advanced: {
+      debugMode: false,
+      apiKeys: {}
+    }
+  };
+}
+
+module.exports.getDefaultSettings = getDefaultSettings;
 
 module.exports = db;

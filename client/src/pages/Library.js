@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getLibrary, removeFromLibrary, getProxiedImageUrl } from '../services/api';
 
 function Library() {
+  const navigate = useNavigate();
   const [library, setLibrary] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,14 +63,27 @@ function Library() {
       <div className="card-grid">
         {library.map(manga => (
           <div key={manga.id} className="manga-card">
-            <img
-              src={getProxiedImageUrl(manga.cover_url) || 'https://picsum.photos/seed/nocover/300/450'}
-              alt={manga.title}
-              className="cover"
-              onError={(e) => { e.target.src = 'https://picsum.photos/seed/nocover/300/450'; }}
-            />
+            <div 
+              className="cover-wrapper"
+              onClick={() => navigate(`/manga/${manga.mangabaka_id || manga.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              <img
+                src={getProxiedImageUrl(manga.cover_url) || 'https://picsum.photos/seed/nocover/300/450'}
+                alt={manga.title}
+                className="cover"
+                onError={(e) => { e.target.src = 'https://picsum.photos/seed/nocover/300/450'; }}
+              />
+              <div className="cover-overlay">
+                <span>View Details</span>
+              </div>
+            </div>
             <div className="info">
-              <h3>{manga.title}</h3>
+              <h3 
+                onClick={() => navigate(`/manga/${manga.mangabaka_id || manga.id}`)}
+                style={{ cursor: 'pointer' }}
+                className="clickable-title"
+              >{manga.title}</h3>
               <div className="meta">
                 {manga.chapters_count} chapters
               </div>

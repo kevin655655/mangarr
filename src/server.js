@@ -8,6 +8,7 @@ const mangaRoutes = require('./routes/manga');
 const libraryRoutes = require('./routes/library');
 const downloadRoutes = require('./routes/downloads');
 const proxyRoutes = require('./routes/proxy');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use('/api/manga', mangaRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/downloads', downloadRoutes);
 app.use('/api/proxy', proxyRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', version: '0.1.0' });

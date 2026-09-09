@@ -25,7 +25,25 @@ router.post('/', (req, res) => {
     authors,
     artists,
     genres,
-    chapters_count
+    chapters_count,
+    volumes_count,
+    content_rating,
+    demographic,
+    original_language,
+    publisher,
+    magazine,
+    rating,
+    follows_count,
+    views_count,
+    last_updated,
+    anilist_id,
+    mal_id,
+    official_website,
+    raw_source_url,
+    english_license_url,
+    related_manga,
+    recommendations,
+    same_author_works
   } = req.body;
 
   if (!mangabaka_id || !title) {
@@ -33,14 +51,39 @@ router.post('/', (req, res) => {
   }
 
   const sql = `
-    INSERT INTO library (mangabaka_id, title, alt_titles, description, cover_url, status, year, authors, artists, genres, chapters_count)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO library (
+      mangabaka_id, title, alt_titles, description, cover_url, status, year,
+      authors, artists, genres, chapters_count, volumes_count, content_rating,
+      demographic, original_language, publisher, magazine, rating, follows_count,
+      views_count, last_updated, anilist_id, mal_id, official_website,
+      raw_source_url, english_license_url, related_manga, recommendations, same_author_works
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(mangabaka_id) DO UPDATE SET
       title = excluded.title,
       description = excluded.description,
       cover_url = excluded.cover_url,
       status = excluded.status,
-      chapters_count = excluded.chapters_count
+      year = excluded.year,
+      chapters_count = excluded.chapters_count,
+      volumes_count = excluded.volumes_count,
+      content_rating = excluded.content_rating,
+      demographic = excluded.demographic,
+      original_language = excluded.original_language,
+      publisher = excluded.publisher,
+      magazine = excluded.magazine,
+      rating = excluded.rating,
+      follows_count = excluded.follows_count,
+      views_count = excluded.views_count,
+      last_updated = excluded.last_updated,
+      anilist_id = excluded.anilist_id,
+      mal_id = excluded.mal_id,
+      official_website = excluded.official_website,
+      raw_source_url = excluded.raw_source_url,
+      english_license_url = excluded.english_license_url,
+      related_manga = excluded.related_manga,
+      recommendations = excluded.recommendations,
+      same_author_works = excluded.same_author_works
   `;
 
   db.run(sql, [
@@ -54,7 +97,25 @@ router.post('/', (req, res) => {
     JSON.stringify(authors || []),
     JSON.stringify(artists || []),
     JSON.stringify(genres || []),
-    chapters_count || 0
+    chapters_count || 0,
+    volumes_count || 0,
+    content_rating || 'unknown',
+    demographic || '',
+    original_language || '',
+    publisher || '',
+    magazine || '',
+    rating || null,
+    follows_count || 0,
+    views_count || 0,
+    last_updated || '',
+    anilist_id || '',
+    mal_id || '',
+    official_website || '',
+    raw_source_url || '',
+    english_license_url || '',
+    JSON.stringify(related_manga || []),
+    JSON.stringify(recommendations || []),
+    JSON.stringify(same_author_works || [])
   ], function(err) {
     if (err) {
       return res.status(500).json({ error: err.message });

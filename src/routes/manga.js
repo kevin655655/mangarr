@@ -26,4 +26,46 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /api/manga/:id/enriched - enriched details with external links resolution
+router.get('/:id/enriched', async (req, res) => {
+  try {
+    const manga = await getMangaDetails(req.params.id);
+    if (!manga) {
+      return res.status(404).json({ error: 'Manga not found' });
+    }
+
+    // Build enriched external links
+    const enrichedLinks = {
+      anilist: manga.externalLinks?.anilist || (manga.anilistId ? `https://anilist.co/manga/${manga.anilistId}` : null),
+      mal: manga.externalLinks?.mal || (manga.malId ? `https://myanimelist.net/manga/${manga.malId}` : null),
+      official: manga.externalLinks?.official || null,
+      raw: manga.externalLinks?.raw || manga.rawSourceUrl || null,
+      englishLicense: manga.externalLinks?.englishLicense || manga.englishLicenseUrl || null
+    };
+
+    // Filter out null links
+    Object.keys(enrichedLinks).forEach(key => {
+      if (!enrichedLinks[key]) delete enrichedLinks[key];
+    });
+
+    // Build related content
+    const relatedContent = {
+      relatedManga: manga.relatedManga || [],
+      recommendations: manga.recommendations || [],
+      sameAuthorWorks: manga.sameAuthorWorks || []
+    };
+
+    const enriched = {
+      ...manga,
+      enrichedLinks,
+      relatedContent,
+      metadataComplete: true
+    };
+
+    res.json({ manga: enriched });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

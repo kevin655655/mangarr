@@ -3,6 +3,8 @@ import { Routes, Route, NavLink } from 'react-router-dom';
 import Library from './pages/Library';
 import Search from './pages/Search';
 import Downloads from './pages/Downloads';
+import MangaDetails from './pages/MangaDetails';
+import Settings from './pages/Settings';
 import './App.css';
 
 function App() {
@@ -23,6 +25,9 @@ function App() {
           <NavLink to="/downloads" className={({ isActive }) => isActive ? 'active' : ''}>
             Downloads
           </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
+            Settings
+          </NavLink>
         </div>
       </nav>
       <main className="main-content">
@@ -30,6 +35,8 @@ function App() {
           <Route path="/" element={<Library />} />
           <Route path="/search" element={<Search />} />
           <Route path="/downloads" element={<Downloads />} />
+          <Route path="/manga/:id" element={<MangaDetails />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
     </div>
