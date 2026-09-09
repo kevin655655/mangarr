@@ -1,0 +1,193 @@
+/* Mangarr — dark dense sysadmin aesthetic */
+
+:root, .theme-dark {
+  --bg:        oklch(0.16 0.010 260);
+  --bg-2:      oklch(0.19 0.010 260);
+  --bg-3:      oklch(0.22 0.012 260);
+  --bg-4:      oklch(0.26 0.014 260);
+  --surface:   oklch(0.21 0.012 260);
+  --surface-2: oklch(0.24 0.014 260);
+  --line:      oklch(0.30 0.014 260 / 0.7);
+  --line-2:    oklch(0.34 0.014 260);
+  --fg:        oklch(0.96 0.005 260);
+  --fg-2:      oklch(0.82 0.006 260);
+  --fg-3:      oklch(0.65 0.010 260);
+  --fg-4:      oklch(0.48 0.012 260);
+
+  --accent:    oklch(0.78 0.18 146);   /* emerald-green */
+  --accent-2:  oklch(0.70 0.20 146);
+  --accent-ink:oklch(0.18 0.05 146);
+
+  --warn:      oklch(0.80 0.16 82);
+  --bad:       oklch(0.68 0.20 28);
+  --info:      oklch(0.75 0.14 230);
+  --muted-chip: oklch(0.30 0.014 260);
+
+  --chip-ongoing:   oklch(0.78 0.18 146);
+  --chip-completed: oklch(0.75 0.14 230);
+  --chip-hiatus:    oklch(0.80 0.16 82);
+  --chip-cancelled: oklch(0.68 0.20 28);
+
+  --shadow: 0 1px 0 oklch(1 0 0 / 0.03) inset, 0 1px 2px oklch(0 0 0 / 0.4);
+
+  --font-ui: "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.theme-light {
+  --bg:        oklch(0.985 0.004 260);
+  --bg-2:      oklch(0.97 0.005 260);
+  --bg-3:      oklch(0.95 0.006 260);
+  --bg-4:      oklch(0.92 0.007 260);
+  --surface:   oklch(1 0 0);
+  --surface-2: oklch(0.98 0.004 260);
+  --line:      oklch(0.88 0.008 260);
+  --line-2:    oklch(0.82 0.010 260);
+  --fg:        oklch(0.22 0.014 260);
+  --fg-2:      oklch(0.35 0.012 260);
+  --fg-3:      oklch(0.48 0.012 260);
+  --fg-4:      oklch(0.60 0.012 260);
+
+  --accent:    oklch(0.58 0.18 146);
+  --accent-2:  oklch(0.52 0.20 146);
+  --accent-ink:oklch(0.98 0.02 146);
+
+  --warn:      oklch(0.60 0.16 68);
+  --bad:       oklch(0.55 0.22 28);
+  --info:      oklch(0.55 0.16 230);
+  --muted-chip: oklch(0.90 0.006 260);
+
+  --chip-ongoing:   oklch(0.58 0.18 146);
+  --chip-completed: oklch(0.55 0.16 230);
+  --chip-hiatus:    oklch(0.60 0.16 68);
+  --chip-cancelled: oklch(0.55 0.22 28);
+
+  --shadow: 0 1px 0 oklch(1 0 0 / 0.6) inset, 0 1px 2px oklch(0 0 0 / 0.06);
+}
+
+/* Density knob */
+.density-compact { --row-h: 28px; --pad: 8px;  --fs: 12px; --fs-s: 11px; --cover-w: 124px; }
+.density-normal  { --row-h: 34px; --pad: 12px; --fs: 13px; --fs-s: 12px; --cover-w: 156px; }
+.density-comfy   { --row-h: 40px; --pad: 16px; --fs: 14px; --fs-s: 13px; --cover-w: 190px; }
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: var(--fs, 13px);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01","cv11","tnum";
+}
+
+::selection { background: color-mix(in oklch, var(--accent) 40%, transparent); color: var(--fg); }
+
+button { font-family: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* Scrollbars */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--line-2); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* === Shared atoms === */
+.mono { font-family: var(--font-mono); font-feature-settings: "tnum","zero"; }
+.muted { color: var(--fg-3); }
+.dim { color: var(--fg-4); }
+.label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10.5px;
+  color: var(--fg-4);
+}
+
+.hr { height: 1px; background: var(--line); width: 100%; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 20px; padding: 0 7px;
+  border: 1px solid var(--line);
+  background: var(--bg-3);
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.chip--dot::before {
+  content: ""; width: 6px; height: 6px; border-radius: 99px; background: var(--fg-4);
+}
+.chip--ongoing::before   { background: var(--chip-ongoing); box-shadow: 0 0 6px var(--chip-ongoing); }
+.chip--completed::before { background: var(--chip-completed); }
+.chip--hiatus::before    { background: var(--chip-hiatus); }
+.chip--cancelled::before { background: var(--chip-cancelled); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-3);
+  color: var(--fg);
+  font-size: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.btn:hover { background: var(--bg-4); border-color: var(--line-2); }
+.btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: color-mix(in oklch, var(--accent) 60%, black);
+  font-weight: 600;
+}
+.btn--primary:hover { background: var(--accent-2); }
+.btn--ghost { background: transparent; border-color: transparent; color: var(--fg-2); }
+.btn--ghost:hover { background: var(--bg-3); color: var(--fg); }
+.btn--sm { height: 24px; padding: 0 8px; font-size: 11.5px; }
+.btn--icon { width: 28px; padding: 0; justify-content: center; }
+.btn--danger { color: var(--bad); }
+
+.input {
+  height: 28px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 10px;
+  color: var(--fg);
+  outline: none;
+  font-size: 12.5px;
+  min-width: 0;
+}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent) 30%, transparent); }
+
+.select {
+  height: 28px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 22px 0 10px;
+  color: var(--fg);
+  font-size: 12px;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-3) 50%),
+                    linear-gradient(135deg, var(--fg-3) 50%, transparent 50%);
+  background-position: calc(100% - 10px) 12px, calc(100% - 6px) 12px;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+/* status text colors */
+.s-good { color: var(--accent); }
+.s-warn { color: var(--warn); }
+.s-bad  { color: var(--bad); }
+.s-info { color: var(--info); }
+
+/* Focus outline */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
