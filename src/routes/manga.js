@@ -12,7 +12,14 @@ router.get('/search', async (req, res) => {
     const results = await searchManga(q, limit ? parseInt(limit) : 20);
     res.json({ results });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // 502 (Bad Gateway) is the right code when the *upstream* (Mangabaka)
+    // is the failing party. 500 would imply our own backend is broken,
+    // which misleads operators and hides infrastructure problems.
+    res.status(502).json({
+      error: 'upstream_unavailable',
+      message: error.message,
+      query: { q, limit: limit ? parseInt(limit) : 20 }
+    });
   }
 });
 
@@ -22,7 +29,11 @@ router.get('/:id', async (req, res) => {
     const manga = await getMangaDetails(req.params.id);
     res.json({ manga });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(502).json({
+      error: 'upstream_unavailable',
+      message: error.message,
+      mangaId: req.params.id
+    });
   }
 });
 
@@ -64,7 +75,11 @@ router.get('/:id/enriched', async (req, res) => {
 
     res.json({ manga: enriched });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(502).json({
+      error: 'upstream_unavailable',
+      message: error.message,
+      mangaId: req.params.id
+    });
   }
 });
 
