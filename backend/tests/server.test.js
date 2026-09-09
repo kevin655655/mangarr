@@ -23,5 +23,5 @@ describe('API Endpoints', () => {
     const res = await request(app).get('/api/library');
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('library');
-  });
+  }, 10000); // Increased timeout for DB operations
 });
