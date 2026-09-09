@@ -1,35 +1,43 @@
-FROM python:3.12-slim-bookworm AS base
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Copy package files
+COPY package*.json ./
+COPY client/package*.json ./client/
 
-# Copy dependency files first for layer caching
-COPY pyproject.toml ./
+# Install dependencies
+RUN npm ci
+RUN cd client && npm ci
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -e "."
+# Copy source
+COPY . .
 
-# Copy application code
+# Build client
+RUN cd client && npm run build
+
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy built client and server source
+COPY --from=builder /app/client/build ./client/build
 COPY src/ ./src/
 
-# Re-install in editable mode with the source present
-RUN pip install --no-cache-dir -e "."
+# Create data directory
+RUN mkdir -p /app/data
 
-# Expose the application port
-EXPOSE 8787
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV DB_PATH=/app/data/mangarr.db
 
-# Run as non-root user
-RUN useradd -m -u 1000 mangarr && chown -R mangarr:mangarr /app
-USER mangarr
+EXPOSE 3000
 
-# Default command
-CMD ["mangarr", "server", "--host", "0.0.0.0", "--port", "8787"]
+CMD ["node", "src/server.js"]

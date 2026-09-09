@@ -1,33 +1,16 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    container_name: mangarr-backend
+  mangarr:
+    build: .
+    container_name: mangarr
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3000:3000"
     volumes:
       - ./data:/app/data
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=3000
       - DB_PATH=/app/data/mangarr.db
       - MANGABAKA_URL=${MANGABAKA_URL:-https://api.mangabaka.com}
-    networks:
-      - mangarr-network
-
-  frontend:
-    build: ./frontend
-    container_name: mangarr-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    networks:
-      - mangarr-network
-
-networks:
-  mangarr-network:
-    driver: bridge
