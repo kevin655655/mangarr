@@ -41,7 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build backend image
-        run: docker build -t mangarr-backend ./backend
+        run: docker buildx build --load ./backend
       - name: Build frontend image
-        run: docker build -t mangarr-frontend ./frontend
+        run: docker buildx build --load ./frontend
