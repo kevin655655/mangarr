@@ -17,4 +17,16 @@ export const removeFromLibrary = (id) => api.delete(`/library/${id}`);
 export const getDownloads = () => api.get('/downloads');
 export const queueDownload = (data) => api.post('/downloads', data);
 
+/**
+ * Proxy an external image URL through the backend to bypass CORS/referrer restrictions
+ * @param {string} url - The external image URL to proxy
+ * @returns {string} - The proxied URL
+ */
+export const getProxiedImageUrl = (url) => {
+  if (!url) return '';
+  // Don't proxy data URIs or already-proxied URLs
+  if (url.startsWith('data:') || url.startsWith('/api/proxy/')) return url;
+  return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+};
+
 export default api;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { searchManga, addToLibrary } from '../services/api';
+import { searchManga, addToLibrary, getProxiedImageUrl } from '../services/api';
 
 function Search() {
   const [query, setQuery] = useState('');
@@ -73,9 +73,10 @@ function Search() {
           {results.map(manga => (
             <div key={manga.id} className="manga-card">
               <img
-                src={manga.coverUrl || manga.cover_url || 'https://via.placeholder.com/300x450/252542/666?text=No+Cover'}
+                src={getProxiedImageUrl(manga.coverUrl || manga.cover_url) || 'https://picsum.photos/seed/nocover/300/450'}
                 alt={manga.title}
                 className="cover"
+                onError={(e) => { e.target.src = 'https://picsum.photos/seed/nocover/300/450'; }}
               />
               <div className="info">
                 <h3>{manga.title}</h3>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getLibrary, removeFromLibrary } from '../services/api';
+import { getLibrary, removeFromLibrary, getProxiedImageUrl } from '../services/api';
 
 function Library() {
   const [library, setLibrary] = useState([]);
@@ -62,9 +62,10 @@ function Library() {
         {library.map(manga => (
           <div key={manga.id} className="manga-card">
             <img
-              src={manga.cover_url || 'https://via.placeholder.com/300x450/252542/666?text=No+Cover'}
+              src={getProxiedImageUrl(manga.cover_url) || 'https://picsum.photos/seed/nocover/300/450'}
               alt={manga.title}
               className="cover"
+              onError={(e) => { e.target.src = 'https://picsum.photos/seed/nocover/300/450'; }}
             />
             <div className="info">
               <h3>{manga.title}</h3>

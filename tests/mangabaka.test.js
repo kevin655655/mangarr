@@ -5,9 +5,11 @@ describe('Mangabaka Service', () => {
     const raw = {
       id: 'test-1',
       title: 'Test Manga',
-      cover_url: 'https://example.com/cover.jpg',
+      cover: {
+        x350: { x1: 'https://example.com/cover.jpg' }
+      },
       status: 'ongoing',
-      chapters: [{ number: 1 }]
+      total_chapters: '1'
     };
     const normalized = normalizeManga(raw);
     expect(normalized.id).toBe('test-1');

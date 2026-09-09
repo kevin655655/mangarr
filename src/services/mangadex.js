@@ -1,80 +1,107 @@
 const axios = require('axios');
 
-const MANGABAKA_BASE = process.env.MANGABAKA_URL || 'https://api.mangabaka.org';
+const MANGADEX_BASE = 'https://api.mangadex.org';
 
 /**
- * Search for manga via Mangabaka API
- * Falls back to mock data if the API is unavailable
+ * Search for manga via MangaDex API
  */
 async function searchManga(query, limit = 20) {
   try {
-    const response = await axios.get(`${MANGABAKA_BASE}/v1/series/search`, {
-      params: { q: query, limit },
+    const response = await axios.get(`${MANGADEX_BASE}/manga`, {
+      params: {
+        title: query,
+        limit,
+        'contentRating[]': ['safe', 'suggestive'],
+        includes: ['cover_art']
+      },
       timeout: 10000,
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mangarr/0.1.0'
       }
     });
-    return normalizeMangaList(response.data.data || response.data || []);
+    return normalizeMangaList(response.data.data || []);
   } catch (error) {
-    console.error('Mangabaka search error:', error.message);
-    // Return mock data for development if API is unavailable
+    console.error('MangaDex search error:', error.message);
     return getMockSearchResults(query);
   }
 }
 
 /**
- * Get detailed manga info from Mangabaka
+ * Get detailed manga info from MangaDex
  */
 async function getMangaDetails(mangaId) {
   try {
-    const response = await axios.get(`${MANGABAKA_BASE}/v1/series/${mangaId}`, {
+    const response = await axios.get(`${MANGADEX_BASE}/manga/${mangaId}`, {
+      params: { includes: ['cover_art'] },
       timeout: 10000,
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mangarr/0.1.0'
       }
     });
-    return normalizeManga(response.data.data || response.data);
+    return normalizeManga(response.data.data);
   } catch (error) {
-    console.error('Mangabaka details error:', error.message);
+    console.error('MangaDex details error:', error.message);
     return getMockMangaDetails(mangaId);
   }
 }
 
 /**
- * Normalize manga data from Mangabaka API format to a consistent structure
+ * Get cover image URL for a manga
+ */
+function getCoverUrl(manga) {
+  if (!manga) return '';
+  
+  const coverRel = manga.relationships?.find(r => r.type === 'cover_art');
+  const coverFilename = coverRel?.attributes?.fileName;
+  const mangaId = manga.id;
+  
+  if (mangaId && coverFilename) {
+    return `https://uploads.mangadex.org/covers/${mangaId}/${coverFilename}`;
+  }
+  
+  return '';
+}
+
+/**
+ * Normalize manga data from MangaDex API format
  */
 function normalizeManga(manga) {
   if (!manga) return null;
   
-  // Extract cover URL from the cover object
-  let coverUrl = '';
-  if (manga.cover) {
-    // Prefer x350 size, fallback to x250, then x150, then raw
-    coverUrl = manga.cover.x350?.x1 || 
-               manga.cover.x250?.x1 || 
-               manga.cover.x150?.x1 || 
-               manga.cover.raw?.url || 
-               '';
-  }
+  const attrs = manga.attributes || {};
+  const title = attrs.title?.en || attrs.title?.ja || attrs.title?.['ja-ro'] || Object.values(attrs.title || {})[0] || 'Unknown';
+  const altTitles = attrs.altTitles?.map(t => Object.values(t)[0]).filter(Boolean) || [];
+  const description = attrs.description?.en || Object.values(attrs.description || {})[0] || '';
+  const year = attrs.year || null;
+  const status = attrs.status || 'unknown';
+  const tags = attrs.tags?.map(t => t.attributes?.name?.en).filter(Boolean) || [];
+  
+  // Get authors/artists from relationships
+  const authors = manga.relationships
+    ?.filter(r => r.type === 'author')
+    .map(r => r.attributes?.name)
+    .filter(Boolean) || [];
+  
+  const artists = manga.relationships
+    ?.filter(r => r.type === 'artist')
+    .map(r => r.attributes?.name)
+    .filter(Boolean) || [];
   
   return {
-    id: manga.id?.toString() || '',
-    title: manga.title || manga.native_title || 'Unknown',
-    altTitles: manga.secondary_titles?.unknown?.map(t => t.title) || [],
-    description: manga.description || '',
-    coverUrl: coverUrl,
-    status: manga.status || 'unknown',
-    year: manga.year || null,
-    authors: manga.authors || [],
-    artists: manga.artists || [],
-    genres: manga.genres || [],
-    chaptersCount: manga.total_chapters ? parseInt(manga.total_chapters) : 0,
-    chapters: [],
-    rating: manga.rating || null,
-    contentRating: manga.content_rating || 'unknown'
+    id: manga.id,
+    title,
+    altTitles,
+    description,
+    coverUrl: getCoverUrl(manga),
+    status,
+    year,
+    authors,
+    artists,
+    genres: tags,
+    chaptersCount: attrs.lastChapter || 0,
+    chapters: []
   };
 }
 
