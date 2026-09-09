@@ -30,16 +30,11 @@ const db = new sqlite3.Database(DB_PATH, (err) => {
   }
 });
 
-// Make db serial queue of CREATE TABLE calls.
-db.serialize(() => {
-  // Implemented below in initTables via plain .run() calls; sqlite3's
-  // default behaviour already serializes per-connection calls.
-});
-
 function initTables() {
-  // Run all CREATE TABLE statements in a serialize block so they are
-  // guaranteed to execute before the settings INSERT (and before any
-  // external code can touch the tables).
+  // Run all CREATE TABLE statements in a serialize block so they execute
+  // in order. The markInitialized() call is only reached after the
+  // settings INSERT (or SELECT) callback completes - meaning all tables
+  // physically exist on disk before any external INSERT can succeed.
   db.serialize(() => {
     db.run(`
       CREATE TABLE IF NOT EXISTS library (
@@ -109,9 +104,14 @@ function initTables() {
         markInitialized();
         return;
       }
-      // Insert default settings row if none exists (only after tables exist).
+      // Insert default settings row if none exists.
       db.get('SELECT id FROM settings WHERE id = 1', [], (err, row) => {
-        if (!err && !row) {
+        if (err) {
+          console.error('Error reading settings:', err.message);
+          markInitialized();
+          return;
+        }
+        if (!row) {
           const defaults = getDefaultSettings();
           db.run(
             `INSERT INTO settings (id, sources, downloads, reader, library, ui, advanced) VALUES (1, ?, ?, ?, ?, ?, ?)`,
@@ -123,7 +123,10 @@ function initTables() {
               JSON.stringify(defaults.ui),
               JSON.stringify(defaults.advanced)
             ],
-            () => markInitialized()
+            (insertErr) => {
+              if (insertErr) console.error('Error inserting default settings:', insertErr.message);
+              markInitialized();
+            }
           );
         } else {
           markInitialized();
@@ -196,15 +199,11 @@ function waitForInit() {
   if (initState === 'initialized') return Promise.resolve();
   return new Promise((resolve) => {
     initWaiters.push(resolve);
-    // Safety net so waiters are never stranded if the connection callback
-    // never fires (e.g. open error swallowed).
-    setTimeout(() => {
-      if (initState !== 'initialized') markInitialized();
-    }, 2000);
   });
 }
 
-module.exports.getDefaultSettings = getDefaultSettings;
-module.exports.waitForInit = waitForInit;
-
 module.exports = db;
+db.getDefaultSettings = getDefaultSettings;
+db.waitForInit = waitForInit;
+db._initState = () => initState;
+db._initWaiters = () => initWaiters.length;
