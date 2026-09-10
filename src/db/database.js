@@ -202,8 +202,59 @@ function waitForInit() {
   });
 }
 
+/**
+ * Read the persisted settings row (id = 1) and return it as a parsed
+ * object with all six categories. Returns the defaults if the row is
+ * missing or any column fails to JSON.parse.
+ */
+async function getSettings() {
+  await waitForInit();
+  return new Promise((resolve, reject) => {
+    db.get(
+      'SELECT sources, downloads, reader, library, ui, advanced FROM settings WHERE id = 1',
+      [],
+      (err, row) => {
+        if (err) return reject(err);
+        if (!row) return resolve(getDefaultSettings());
+        try {
+          resolve({
+            sources: JSON.parse(row.sources || '{}'),
+            downloads: JSON.parse(row.downloads || '{}'),
+            reader: JSON.parse(row.reader || '{}'),
+            library: JSON.parse(row.library || '{}'),
+            ui: JSON.parse(row.ui || '{}'),
+            advanced: JSON.parse(row.advanced || '{}')
+          });
+        } catch (e) {
+          resolve(getDefaultSettings());
+        }
+      }
+    );
+  });
+}
+
+/**
+ * Resolve the Mangabaka base URL to use for outgoing API calls.
+ * Authoritative source is the persisted settings row
+ * (settings.sources.mangabakaUrl); the env var MANGABAKA_URL is only
+ * a fallback for deployments that don't have a settings row yet.
+ */
+async function getMangabakaBaseUrl() {
+  const fallback = process.env.MANGABAKA_URL || 'https://api.mangabaka.org';
+  try {
+    const settings = await getSettings();
+    const fromDb = settings && settings.sources && settings.sources.mangabakaUrl;
+    return fromDb || fallback;
+  } catch (e) {
+    console.warn('[db] getMangabakaBaseUrl falling back to env:', e.message);
+    return fallback;
+  }
+}
+
 module.exports = db;
 db.getDefaultSettings = getDefaultSettings;
+db.getSettings = getSettings;
+db.getMangabakaBaseUrl = getMangabakaBaseUrl;
 db.waitForInit = waitForInit;
 db._initState = () => initState;
 db._initWaiters = () => initWaiters.length;
