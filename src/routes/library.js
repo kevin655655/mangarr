@@ -89,36 +89,45 @@ router.post('/', (req, res) => {
       same_author_works = excluded.same_author_works
   `;
 
+  // Helper: turn `undefined` into `null` for sqlite3 binds. Without this,
+  // a missing optional field (e.g. related_manga) crashes with
+  // SQLITE_MISE ("Statement cannot have undefined values") before any
+  // INSERT happens. Strings still stringify as before; everything else
+  // gets a sensible default.
+  const json = (v) => (v === undefined ? null : JSON.stringify(v));
+  const str = (v, d = '') => (v === undefined ? d : v);
+  const num = (v, d = null) => (v === undefined || v === null || Number.isNaN(v) ? d : v);
+
   db.run(sql, [
-    mangabaka_id,
-    title,
-    JSON.stringify(alt_titles || []),
-    description || '',
-    cover_url || '',
-    status || 'unknown',
-    year || null,
-    JSON.stringify(authors || []),
-    JSON.stringify(artists || []),
-    JSON.stringify(genres || []),
-    chapters_count || 0,
-    volumes_count || 0,
-    content_rating || 'unknown',
-    demographic || '',
-    original_language || '',
-    publisher || '',
-    magazine || '',
-    rating || null,
-    follows_count || 0,
-    views_count || 0,
-    last_updated || '',
-    anilist_id || '',
-    mal_id || '',
-    official_website || '',
-    raw_source_url || '',
-    english_license_url || '',
-    JSON.stringify(related_manga || []),
-    JSON.stringify(recommendations || []),
-    JSON.stringify(same_author_works || [])
+    str(mangabaka_id),
+    str(title),
+    json(alt_titles),
+    str(description),
+    str(cover_url),
+    str(status, 'unknown'),
+    num(year),
+    json(authors),
+    json(artists),
+    json(genres),
+    num(chapters_count, 0),
+    num(volumes_count, 0),
+    str(content_rating, 'unknown'),
+    str(demographic),
+    str(original_language),
+    str(publisher),
+    str(magazine),
+    num(rating),
+    num(follows_count, 0),
+    num(views_count, 0),
+    str(last_updated),
+    str(anilist_id),
+    str(mal_id),
+    str(official_website),
+    str(raw_source_url),
+    str(english_license_url),
+    json(related_manga),
+    json(recommendations),
+    json(same_author_works)
   ], function(err) {
     if (err) {
       return res.status(500).json({ error: err.message });
